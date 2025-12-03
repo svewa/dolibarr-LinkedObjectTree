@@ -370,10 +370,17 @@ class LinkedObjectTree
 			$excludeType = array($object->element);
 			
 			// Call Dolibarr's native function to generate the link dropdown
-			// Returns array with 'linktoelem' and 'htmltoenteralink'
+			// Returns array with 'linktoelem' (the dropdown) and 'htmltoenteralink' (the forms)
 			$tmparray = $form->showLinkToObjectBlock($object, array(), $excludeType, 1);
+			
+			// Use linktoelem which contains the actual dropdown menu
+			if (!empty($tmparray['linktoelem'])) {
+				$moreHtml = $tmparray['linktoelem'];
+			}
+			
+			// Also print the htmltoenteralink forms (needed for linking functionality)
 			if (!empty($tmparray['htmltoenteralink'])) {
-				$moreHtml = $tmparray['htmltoenteralink'];
+				$moreHtml .= $tmparray['htmltoenteralink'];
 			}
 		}
 
