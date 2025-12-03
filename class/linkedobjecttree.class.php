@@ -353,16 +353,29 @@ class LinkedObjectTree
 	 */
 	public function renderTreeHTML($treeNodes)
 	{
-		global $langs, $conf;
+		global $langs, $conf, $user;
 
 		if (empty($treeNodes)) {
 			return '<div class="linkedobjecttree-empty">'.$langs->trans("NoLinkedObjects").'</div>';
 		}
 
-		// Add proper Dolibarr section header
+		// Build "Link" action URL for the header
+		$linkUrl = '';
+		if (!empty($this->currentObjectId) && !empty($this->currentObjectType)) {
+			$linkUrl = DOL_URL_ROOT.'/core/link.php?action=link&from='.$this->currentObjectType.'&id='.$this->currentObjectId;
+		}
+
+		// Add proper Dolibarr section header with link action
 		$html = '<br>'."\n";
 		$html .= '<div class="div-table-responsive-no-min">'."\n";
-		$html .= load_fiche_titre($langs->trans("RelatedObjects"), '', '');
+		
+		// Create action link for header
+		$moreHtml = '';
+		if ($linkUrl && $user->hasRight('core', 'write')) {
+			$moreHtml = '<a class="butAction" href="'.$linkUrl.'">'.$langs->trans("Link").'</a>';
+		}
+		
+		$html .= load_fiche_titre($langs->trans("RelatedObjects"), $moreHtml, '');
 		
 		// Render as table with columns
 		$html .= '<table class="noborder linkedobjecttree-table centpercent">'."\n";
@@ -370,6 +383,7 @@ class LinkedObjectTree
 		// Table header
 		$html .= '<tr class="liste_titre">';
 		$html .= '<th class="linkedobjecttree-col-ref">'.$langs->trans("Ref").'</th>';
+		$html .= '<th class="linkedobjecttree-col-type">'.$langs->trans("Type").'</th>';
 		$html .= '<th class="linkedobjecttree-col-date">'.$langs->trans("Date").'</th>';
 		$html .= '<th class="linkedobjecttree-col-amount right">'.$langs->trans("AmountHT").'</th>';
 		$html .= '<th class="linkedobjecttree-col-status right">'.$langs->trans("Status").'</th>';
@@ -439,21 +453,26 @@ class LinkedObjectTree
 		
 		$html .= '</td>';
 		
-		// Column 2: Date
+		// Column 2: Type
+		$html .= '<td class="linkedobjecttree-col-type">';
+		$html .= $this->getTranslatedType($node['type']);
+		$html .= '</td>';
+		
+		// Column 3: Date
 		$html .= '<td class="linkedobjecttree-col-date">';
 		if (!empty($node['data']['date'])) {
 			$html .= dol_print_date($node['data']['date'], 'day');
 		}
 		$html .= '</td>';
 		
-		// Column 3: Amount
+		// Column 4: Amount
 		$html .= '<td class="linkedobjecttree-col-amount right">';
 		if (isset($node['data']['amount']) && $node['data']['amount'] !== '') {
 			$html .= price($node['data']['amount']);
 		}
 		$html .= '</td>';
 		
-		// Column 4: Status
+		// Column 5: Status
 		$html .= '<td class="linkedobjecttree-col-status right">';
 		if (!empty($node['data']['status'])) {
 			$html .= $node['data']['status'];
@@ -470,6 +489,50 @@ class LinkedObjectTree
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Get translated name for object type
+	 *
+	 * @param string $type Object type
+	 * @return string Translated type name
+	 */
+	private function getTranslatedType($type)
+	{
+		global $langs;
+		
+		// Map object types to Dolibarr translation keys
+		$translationMap = array(
+			'facture' => 'Invoice',
+			'invoice' => 'Invoice',
+			'propal' => 'Proposal',
+			'commande' => 'Order',
+			'order' => 'Order',
+			'facture_fourn' => 'SupplierInvoice',
+			'invoice_supplier' => 'SupplierInvoice',
+			'commande_fournisseur' => 'SupplierOrder',
+			'order_supplier' => 'SupplierOrder',
+			'supplier_proposal' => 'SupplierProposal',
+			'shipping' => 'Shipment',
+			'expedition' => 'Shipment',
+			'delivery' => 'Delivery',
+			'contrat' => 'Contract',
+			'contract' => 'Contract',
+			'fichinter' => 'Intervention',
+			'ticket' => 'Ticket',
+			'project' => 'Project',
+			'project_task' => 'Task',
+			'task' => 'Task',
+			'mo' => 'ManufacturingOrder',
+			'mrp_mo' => 'ManufacturingOrder',
+			'bom' => 'BOM',
+		);
+		
+		// Get the translation key
+		$translationKey = isset($translationMap[$type]) ? $translationMap[$type] : ucfirst($type);
+		
+		// Return the translated string
+		return $langs->trans($translationKey);
 	}
 
 	/**
