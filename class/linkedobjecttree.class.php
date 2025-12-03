@@ -369,10 +369,10 @@ class LinkedObjectTree
 		$html = '<br>'."\n";
 		$html .= '<div class="div-table-responsive-no-min">'."\n";
 		
-		// Create action link for header
+		// Create action link for header - use a simple link with float right style
 		$moreHtml = '';
-		if ($linkUrl && $user->hasRight('core', 'write')) {
-			$moreHtml = '<a class="butAction" href="'.$linkUrl.'">'.$langs->trans("Link").'</a>';
+		if ($linkUrl) {
+			$moreHtml = '<a class="commonlink" href="'.$linkUrl.'" style="float: right; margin-top: 5px;">'.$langs->trans("Link").'</a>';
 		}
 		
 		$html .= load_fiche_titre($langs->trans("RelatedObjects"), $moreHtml, '');
