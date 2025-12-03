@@ -1,0 +1,76 @@
+/**
+ * Linked Object Tree CSS
+ * Styles for tree view display
+ */
+
+/* Table styling */
+.linkedobjecttree-table {
+	border-collapse: collapse;
+	width: 100%;
+}
+
+/* Row styling */
+.linkedobjecttree-row {
+	/* Use Dolibarr's standard oddeven styling */
+}
+
+.linkedobjecttree-row.linkedobjecttree-current {
+	background-color: #e8f5e9 !important;
+	font-weight: bold;
+}
+
+/* Toggle button styling */
+.linkedobjecttree-toggle-btn {
+	cursor: pointer;
+	display: inline-block;
+	width: 16px;
+	text-align: center;
+	color: #666;
+	user-select: none;
+}
+
+.linkedobjecttree-toggle-btn:hover {
+	color: #000;
+}
+
+.linkedobjecttree-toggle-btn .fa {
+	font-size: 14px;
+}
+
+.linkedobjecttree-toggle-spacer {
+	display: inline-block;
+	width: 16px;
+}
+
+/* Indentation for tree structure */
+.linkedobjecttree-indent {
+	display: inline-block;
+}
+
+/* Column widths */
+.linkedobjecttree-col-ref {
+	min-width: 200px;
+}
+
+.linkedobjecttree-col-date {
+	width: 120px;
+	white-space: nowrap;
+}
+
+.linkedobjecttree-col-amount {
+	width: 120px;
+	text-align: right;
+	white-space: nowrap;
+}
+
+.linkedobjecttree-col-status {
+	width: 150px;
+	text-align: right;
+}
+
+/* Empty state */
+.linkedobjecttree-empty {
+	padding: 10px;
+	color: #666;
+	font-style: italic;
+}

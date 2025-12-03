@@ -1,0 +1,58 @@
+# Copyright (C) 2024 Linked Object Tree Module
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+#
+# Generic
+#
+
+# Module label 'ModuleLinkedObjectTreeName'
+ModuleLinkedObjectTreeName = Linked Object Tree
+# Module description 'ModuleLinkedObjectTreeDesc'
+ModuleLinkedObjectTreeDesc = Display linked objects in a complete tree view showing the full hierarchy of related documents
+
+#
+# Admin page
+#
+LinkedObjectTreeSetup = Linked Object Tree Setup
+LinkedObjectTreeAbout = This module replaces the default linked objects view with an interactive tree visualization that shows the complete hierarchy of related documents. The current object is highlighted in context, making it easy to see the full relationship graph.
+
+# Settings
+MaxDepth = Maximum tree depth
+MaxDepthHelp = Maximum number of levels to traverse when building the tree (1-50)
+
+#
+# Tree view
+#
+NoLinkedObjects = No linked objects found
+LinkedObjectsTree = Linked Objects Tree
+ViewMode = View Mode
+TreeMode = Tree
+FlatMode = Flat
+ExpandAll = Expand All
+CollapseAll = Collapse All
+CurrentObject = Current Object
+ExpandCollapse = Click to expand/collapse
+
+# Table columns
+Ref = Reference
+Date = Date
+AmountHT = Amount (excl. VAT)
+Status = Status
+
+#
+# Object types
+#
+ObjectType = Object Type
+
+# Messages
+TreeLoadingError = Error loading object tree
+TreeGenerationError = Error generating tree view
