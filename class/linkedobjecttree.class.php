@@ -332,12 +332,22 @@ class LinkedObjectTree
 		$result = $obj->fetch($objectId);
 
 		if ($result > 0) {
+			// Determine the appropriate date field based on object type (matching Dolibarr's original behavior)
+			$date = '';
+			if ($objectType == 'expedition' || $objectType == 'shipping') {
+				// For shipments: use date_delivery (planned delivery) with fallback to date_creation
+				$date = !empty($obj->date_delivery) ? $obj->date_delivery : (!empty($obj->date_creation) ? $obj->date_creation : '');
+			} else {
+				// For other types: use standard date or datec
+				$date = isset($obj->date) ? $obj->date : (isset($obj->datec) ? $obj->datec : '');
+			}
+			
 			return array(
 				'ref' => $obj->ref,
 				'label' => $obj->ref.(isset($obj->label) ? ' - '.$obj->label : ''),
 				'url' => $obj->getNomUrl(1),
 				'status' => method_exists($obj, 'getLibStatut') ? $obj->getLibStatut(3) : '',
-				'date' => isset($obj->date) ? $obj->date : (isset($obj->datec) ? $obj->datec : ''),
+				'date' => $date,
 				'amount' => isset($obj->total_ttc) ? $obj->total_ttc : (isset($obj->total_ht) ? $obj->total_ht : ''),
 			);
 		}
@@ -422,6 +432,7 @@ class LinkedObjectTree
 		$html .= '<th class="linkedobjecttree-col-date">'.$langs->trans("Date").'</th>';
 		$html .= '<th class="linkedobjecttree-col-amount right">'.$langs->trans("AmountHT").'</th>';
 		$html .= '<th class="linkedobjecttree-col-status right">'.$langs->trans("Status").'</th>';
+		$html .= '<th class="linkedobjecttree-col-action right"></th>';
 		$html .= '</tr>'."\n";
 
 		// Table body
@@ -512,6 +523,24 @@ class LinkedObjectTree
 		if (!empty($node['data']['status'])) {
 			$html .= $node['data']['status'];
 		}
+		$html .= '</td>';
+		
+		// Column 6: Action (unlink button)
+		$html .= '<td class="linkedobjecttree-col-action right">';
+		
+		// Determine if unlinking is allowed based on Dolibarr's business rules
+		$canUnlink = $this->canUnlinkObject($node['type'], $this->currentObjectType);
+		
+		if ($canUnlink && !$node['is_current']) {
+			// Build unlink URL
+			$unlinkUrl = $_SERVER["PHP_SELF"].'?id='.$this->currentObjectId.'&action=dellink&token='.newToken();
+			$unlinkUrl .= '&dellinkid='.$node['id'].'&dellinktype='.urlencode($node['type']);
+			
+			$html .= '<a class="reposition" href="'.$unlinkUrl.'" title="'.$langs->transnoentitiesnoconv("RemoveLink").'">';
+			$html .= img_picto($langs->transnoentitiesnoconv("RemoveLink"), 'unlink');
+			$html .= '</a>';
+		}
+		
 		$html .= '</td>';
 		
 		$html .= '</tr>';
@@ -605,5 +634,56 @@ class LinkedObjectTree
 		);
 
 		return isset($iconMap[$type]) ? $iconMap[$type] : 'generic';
+	}
+
+	/**
+	 * Check if an object can be unlinked based on Dolibarr's business rules
+	 *
+	 * @param string $linkedObjectType Type of the linked object to unlink
+	 * @param string $currentObjectType Type of the current object
+	 * @return bool True if unlinking is allowed
+	 */
+	private function canUnlinkObject($linkedObjectType, $currentObjectType)
+	{
+		// Normalize object types (handle variations like 'shipping' vs 'expedition')
+		$normalizedLinked = $this->normalizeObjectType($linkedObjectType);
+		$normalizedCurrent = $this->normalizeObjectType($currentObjectType);
+		
+		// Business rule 1: Shipments MUST stay linked to orders
+		// If the current object is an order (commande), don't allow unlinking shipments
+		if ($normalizedCurrent == 'commande' && $normalizedLinked == 'expedition') {
+			return false;
+		}
+		
+		// Business rule 2: Shipments MUST stay linked to orders (reverse direction)
+		// If the current object is a shipment, don't allow unlinking orders
+		if ($normalizedCurrent == 'expedition' && $normalizedLinked == 'commande') {
+			return false;
+		}
+		
+		// All other relationships can be unlinked
+		return true;
+	}
+
+	/**
+	 * Normalize object type names to handle variations
+	 *
+	 * @param string $type Object type
+	 * @return string Normalized type
+	 */
+	private function normalizeObjectType($type)
+	{
+		$typeMap = array(
+			'shipping' => 'expedition',
+			'order' => 'commande',
+			'invoice' => 'facture',
+			'invoice_supplier' => 'facture_fourn',
+			'order_supplier' => 'commande_fournisseur',
+			'contract' => 'contrat',
+			'project_task' => 'task',
+			'mrp_mo' => 'mo',
+		);
+		
+		return isset($typeMap[$type]) ? $typeMap[$type] : $type;
 	}
 }

@@ -63,6 +63,54 @@ class ActionsLinkedObjectTree
 	}
 
 	/**
+	 * Hook to handle actions before page rendering
+	 *
+	 * @param array $parameters Hook parameters
+	 * @param CommonObject $object Current object
+	 * @param string $action Current action
+	 * @param HookManager $hookmanager Hook manager
+	 * @return int 0=OK
+	 */
+	public function doActions($parameters, &$object, &$action, $hookmanager)
+	{
+		global $conf, $langs, $user;
+
+		// Check if module is enabled
+		if (empty($conf->linkedobjecttree->enabled)) {
+			return 0;
+		}
+
+		// Handle unlink action
+		if ($action == 'dellink' && !empty($object) && !empty($object->id)) {
+			// Check token
+			if (!newToken('check')) {
+				return 0;
+			}
+
+			$dellinkid = GETPOST('dellinkid', 'int');
+			$dellinktype = GETPOST('dellinktype', 'alpha');
+
+			if ($dellinkid > 0 && !empty($dellinktype)) {
+				dol_syslog("LinkedObjectTree: Unlinking ".$dellinktype." ID ".$dellinkid." from ".$object->element." ID ".$object->id, LOG_DEBUG);
+
+				// Use Dolibarr's native method to delete the link
+				$result = $object->deleteObjectLinked(null, '', $dellinkid, $dellinktype);
+
+				if ($result > 0) {
+					setEventMessages($langs->trans("LinkRemoved"), null, 'mesgs');
+					// Redirect to avoid resubmission
+					header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+					exit;
+				} else {
+					setEventMessages($object->error, $object->errors, 'errors');
+				}
+			}
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Hook called to replace the linked objects section
 	 * This is the ONLY hook we use to avoid duplicate displays
 	 *
