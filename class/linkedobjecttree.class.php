@@ -361,7 +361,9 @@ class LinkedObjectTree
 		}
 
 		// Build "Link to object" dropdown using Dolibarr's native function
-		$moreHtml = '';
+		$linktoelem = '';
+		$htmltoenteralink = '';
+		
 		if (!empty($object)) {
 			require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
 			$form = new Form($this->db);
@@ -373,22 +375,25 @@ class LinkedObjectTree
 			// Returns array with 'linktoelem' (the dropdown) and 'htmltoenteralink' (the forms)
 			$tmparray = $form->showLinkToObjectBlock($object, array(), $excludeType, 1);
 			
-			// Use linktoelem which contains the actual dropdown menu
+			// Separate the dropdown from the forms
 			if (!empty($tmparray['linktoelem'])) {
-				$moreHtml = $tmparray['linktoelem'];
+				$linktoelem = $tmparray['linktoelem'];
 			}
 			
-			// Also print the htmltoenteralink forms (needed for linking functionality)
 			if (!empty($tmparray['htmltoenteralink'])) {
-				$moreHtml .= $tmparray['htmltoenteralink'];
+				$htmltoenteralink = $tmparray['htmltoenteralink'];
 			}
 		}
 
-		// Add proper Dolibarr section header with link action
+		// Add proper Dolibarr section header with link action (only the dropdown)
 		$html = '<br>'."\n";
 		$html .= '<div class="div-table-responsive-no-min">'."\n";
 		
-		$html .= load_fiche_titre($langs->trans("RelatedObjects"), $moreHtml, '');
+		$html .= load_fiche_titre($langs->trans("RelatedObjects"), $linktoelem, '');
+		
+		// Print the linking forms AFTER the title but BEFORE the table
+		// This is where users select which invoice/order to link
+		$html .= $htmltoenteralink;
 		
 		// Render as table with columns
 		$html .= '<table class="noborder linkedobjecttree-table centpercent">'."\n";
