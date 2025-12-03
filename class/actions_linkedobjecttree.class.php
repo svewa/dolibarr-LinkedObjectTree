@@ -99,7 +99,8 @@ class ActionsLinkedObjectTree
 			dol_syslog("LinkedObjectTree: Built tree with ".count($treeNodes)." root nodes", LOG_DEBUG);
 			
 			if (!empty($treeNodes)) {
-				$html = $tree->renderTreeHTML($treeNodes);
+				// Pass the object to renderTreeHTML so it can generate the native link dropdown
+				$html = $tree->renderTreeHTML($treeNodes, $object);
 				
 				dol_syslog("LinkedObjectTree: Generated HTML length: ".strlen($html), LOG_DEBUG);
 				

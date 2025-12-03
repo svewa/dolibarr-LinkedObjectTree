@@ -349,9 +349,10 @@ class LinkedObjectTree
 	 * Render tree as HTML
 	 *
 	 * @param array $treeNodes Array of tree nodes
+	 * @param CommonObject $object Current object (needed for link dropdown)
 	 * @return string HTML output
 	 */
-	public function renderTreeHTML($treeNodes)
+	public function renderTreeHTML($treeNodes, $object = null)
 	{
 		global $langs, $conf, $user;
 
@@ -359,14 +360,11 @@ class LinkedObjectTree
 			return '<div class="linkedobjecttree-empty">'.$langs->trans("NoLinkedObjects").'</div>';
 		}
 
-		// Build "Link" action URL for the header - link to current page anchor
+		// Build "Link to object" dropdown using Dolibarr's native function
 		$moreHtml = '';
-		if (!empty($this->currentObjectId) && !empty($this->currentObjectType)) {
-			// Create link with icon matching original Dolibarr style
-			$moreHtml = '<a class="commonlink" href="'.$_SERVER['PHP_SELF'].'?id='.$this->currentObjectId.'#linktoobjectname">';
-			$moreHtml .= '<span class="fa fa-link paddingright"></span>';
-			$moreHtml .= $langs->trans("LinkTo");
-			$moreHtml .= '</a>';
+		if (!empty($object) && method_exists($object, 'showLinkToObjectBlock')) {
+			// Call Dolibarr's native function to generate the link dropdown
+			$moreHtml = $object->showLinkToObjectBlock();
 		}
 
 		// Add proper Dolibarr section header with link action
