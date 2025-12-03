@@ -395,6 +395,23 @@ class LinkedObjectTree
 		// This is where users select which invoice/order to link
 		$html .= $htmltoenteralink;
 		
+		// Add the JavaScript to handle linkto clicks (normally printed by showLinkToObjectBlock when nooutput=0)
+		// We need to add it manually since we're using nooutput=1
+		if (!empty($linktoelem) && !empty($conf->use_javascript_ajax)) {
+			$html .= '<!-- Add js to show linkto box -->
+				<script nonce="' . getNonce() . '">
+				jQuery(document).ready(function() {
+					jQuery(".linkto").click(function(e) {
+						console.log("We choose to show/hide links for rel="+jQuery(this).attr(\'rel\')+" so #"+jQuery(this).attr(\'rel\')+"list");
+						jQuery("#"+jQuery(this).attr(\'rel\')+"list").toggle();
+						e.stopPropagation(); // Prevent dropdown from closing
+						return false;
+					});
+				});
+				</script>
+			';
+		}
+		
 		// Render as table with columns
 		$html .= '<table class="noborder linkedobjecttree-table centpercent">'."\n";
 		
