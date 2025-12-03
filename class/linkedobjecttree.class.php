@@ -362,9 +362,19 @@ class LinkedObjectTree
 
 		// Build "Link to object" dropdown using Dolibarr's native function
 		$moreHtml = '';
-		if (!empty($object) && method_exists($object, 'showLinkToObjectBlock')) {
+		if (!empty($object)) {
+			require_once DOL_DOCUMENT_ROOT.'/core/class/html.form.class.php';
+			$form = new Form($this->db);
+			
+			// Get the element type to exclude (don't allow linking to same type)
+			$excludeType = array($object->element);
+			
 			// Call Dolibarr's native function to generate the link dropdown
-			$moreHtml = $object->showLinkToObjectBlock();
+			// Returns array with 'linktoelem' and 'htmltoenteralink'
+			$tmparray = $form->showLinkToObjectBlock($object, array(), $excludeType, 1);
+			if (!empty($tmparray['htmltoenteralink'])) {
+				$moreHtml = $tmparray['htmltoenteralink'];
+			}
 		}
 
 		// Add proper Dolibarr section header with link action
