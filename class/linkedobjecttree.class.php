@@ -359,21 +359,19 @@ class LinkedObjectTree
 			return '<div class="linkedobjecttree-empty">'.$langs->trans("NoLinkedObjects").'</div>';
 		}
 
-		// Build "Link" action URL for the header
-		$linkUrl = '';
+		// Build "Link" action URL for the header - link to current page anchor
+		$moreHtml = '';
 		if (!empty($this->currentObjectId) && !empty($this->currentObjectType)) {
-			$linkUrl = DOL_URL_ROOT.'/core/link.php?action=link&from='.$this->currentObjectType.'&id='.$this->currentObjectId;
+			// Create link with icon matching original Dolibarr style
+			$moreHtml = '<a class="commonlink" href="'.$_SERVER['PHP_SELF'].'?id='.$this->currentObjectId.'#linktoobjectname">';
+			$moreHtml .= '<span class="fa fa-link paddingright"></span>';
+			$moreHtml .= $langs->trans("LinkTo");
+			$moreHtml .= '</a>';
 		}
 
 		// Add proper Dolibarr section header with link action
 		$html = '<br>'."\n";
 		$html .= '<div class="div-table-responsive-no-min">'."\n";
-		
-		// Create action link for header - use a simple link with float right style
-		$moreHtml = '';
-		if ($linkUrl) {
-			$moreHtml = '<a class="commonlink" href="'.$linkUrl.'" style="float: right; margin-top: 5px;">'.$langs->trans("Link").'</a>';
-		}
 		
 		$html .= load_fiche_titre($langs->trans("RelatedObjects"), $moreHtml, '');
 		
