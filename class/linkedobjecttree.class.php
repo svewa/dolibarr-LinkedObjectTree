@@ -247,7 +247,7 @@ class LinkedObjectTree
 	}
 
 	/**
-	 * Load object data
+	 * Load object data using Dolibarr's native getElementProperties
 	 *
 	 * @param int $objectId Object ID
 	 * @param string $objectType Object type
@@ -257,62 +257,12 @@ class LinkedObjectTree
 	{
 		global $langs;
 
-		// Map object types to classes
-		$classMap = array(
-			'facture' => 'Facture',
-			'invoice' => 'Facture',
-			'propal' => 'Propal',
-			'commande' => 'Commande',
-			'order' => 'Commande',
-			'facture_fourn' => 'FactureFournisseur',
-			'invoice_supplier' => 'FactureFournisseur',
-			'commande_fournisseur' => 'CommandeFournisseur',
-			'order_supplier' => 'CommandeFournisseur',
-			'supplier_proposal' => 'SupplierProposal',
-			'shipping' => 'Expedition',
-			'expedition' => 'Expedition',
-			'delivery' => 'Delivery',
-			'contrat' => 'Contrat',
-			'contract' => 'Contrat',
-			'fichinter' => 'Fichinter',
-			'ticket' => 'Ticket',
-			'project' => 'Project',
-			'project_task' => 'Task',
-			'task' => 'Task',
-			'stock_mouvement' => 'MouvementStock',
-			'mo' => 'Mo',
-			'mrp_mo' => 'Mo',
-			'bom' => 'Bom',
-		);
-
-		// Map object types to file paths
-		$fileMap = array(
-			'facture' => '/compta/facture/class/facture.class.php',
-			'invoice' => '/compta/facture/class/facture.class.php',
-			'propal' => '/comm/propal/class/propal.class.php',
-			'commande' => '/commande/class/commande.class.php',
-			'order' => '/commande/class/commande.class.php',
-			'facture_fourn' => '/fourn/class/fournisseur.facture.class.php',
-			'invoice_supplier' => '/fourn/class/fournisseur.facture.class.php',
-			'commande_fournisseur' => '/fourn/class/fournisseur.commande.class.php',
-			'order_supplier' => '/fourn/class/fournisseur.commande.class.php',
-			'supplier_proposal' => '/supplier_proposal/class/supplier_proposal.class.php',
-			'shipping' => '/expedition/class/expedition.class.php',
-			'expedition' => '/expedition/class/expedition.class.php',
-			'delivery' => '/delivery/class/delivery.class.php',
-			'contrat' => '/contrat/class/contrat.class.php',
-			'contract' => '/contrat/class/contrat.class.php',
-			'fichinter' => '/fichinter/class/fichinter.class.php',
-			'ticket' => '/ticket/class/ticket.class.php',
-			'project' => '/projet/class/project.class.php',
-			'project_task' => '/projet/class/task.class.php',
-			'task' => '/projet/class/task.class.php',
-			'mo' => '/mrp/class/mo.class.php',
-			'mrp_mo' => '/mrp/class/mo.class.php',
-			'bom' => '/bom/class/bom.class.php',
-		);
-
-		if (!isset($classMap[$objectType]) || !isset($fileMap[$objectType])) {
+		// Use Dolibarr's native method to get element properties
+		$tmpobject = new CommonObject($this->db);
+		$elementProperties = $tmpobject->getElementProperties($objectType);
+		
+		if (empty($elementProperties) || empty($elementProperties['classfile']) || empty($elementProperties['classpath'])) {
+			// Fallback for unknown types
 			return array(
 				'ref' => '?',
 				'label' => $objectType.' #'.$objectId,
@@ -321,14 +271,22 @@ class LinkedObjectTree
 			);
 		}
 
-		$className = $classMap[$objectType];
-		$filePath = $fileMap[$objectType];
+		// Extract class information from element properties
+		$classname = $elementProperties['classname'];
+		$classpath = $elementProperties['classpath'];
+		$classfile = $elementProperties['classfile'];
 
-		if (!class_exists($className)) {
-			require_once DOL_DOCUMENT_ROOT.$filePath;
+		// Load the class file and instantiate the object
+		$filepath = DOL_DOCUMENT_ROOT.'/'.$classpath.'/'.$classfile;
+		if (!file_exists($filepath)) {
+			return false;
 		}
 
-		$obj = new $className($this->db);
+		if (!class_exists($classname)) {
+			require_once $filepath;
+		}
+
+		$obj = new $classname($this->db);
 		$result = $obj->fetch($objectId);
 
 		if ($result > 0) {
@@ -556,7 +514,7 @@ class LinkedObjectTree
 	}
 
 	/**
-	 * Get translated name for object type
+	 * Get translated name for object type using Dolibarr's native translation
 	 *
 	 * @param string $type Object type
 	 * @return string Translated type name
@@ -565,76 +523,37 @@ class LinkedObjectTree
 	{
 		global $langs;
 		
-		// Map object types to Dolibarr translation keys
-		$translationMap = array(
+		// Use Dolibarr's native method to get element properties
+		$tmpobject = new CommonObject($this->db);
+		$elementProperties = $tmpobject->getElementProperties($type);
+		
+		if (!empty($elementProperties) && !empty($elementProperties['langs'])) {
+			// Load the language file for this element
+			$langs->load($elementProperties['langs']);
+			
+			// Use the lang key if available, otherwise use a default translation
+			$langkey = !empty($elementProperties['langfile']) ? $elementProperties['langfile'] : ucfirst($type);
+			
+			// Try to get the module-specific translation, fallback to ucfirst
+			$translated = $langs->trans($langkey);
+			if ($translated != $langkey) {
+				return $translated;
+			}
+		}
+		
+		// Fallback: try common translations
+		$commonTranslations = array(
 			'facture' => 'Invoice',
-			'invoice' => 'Invoice',
 			'propal' => 'Proposal',
 			'commande' => 'Order',
-			'order' => 'Order',
-			'facture_fourn' => 'SupplierInvoice',
-			'invoice_supplier' => 'SupplierInvoice',
-			'commande_fournisseur' => 'SupplierOrder',
-			'order_supplier' => 'SupplierOrder',
-			'supplier_proposal' => 'SupplierProposal',
-			'shipping' => 'Shipment',
 			'expedition' => 'Shipment',
-			'delivery' => 'Delivery',
 			'contrat' => 'Contract',
-			'contract' => 'Contract',
-			'fichinter' => 'Intervention',
-			'ticket' => 'Ticket',
-			'project' => 'Project',
-			'project_task' => 'Task',
-			'task' => 'Task',
-			'mo' => 'ManufacturingOrder',
-			'mrp_mo' => 'ManufacturingOrder',
-			'bom' => 'BOM',
 		);
 		
-		// Get the translation key
-		$translationKey = isset($translationMap[$type]) ? $translationMap[$type] : ucfirst($type);
-		
-		// Return the translated string
+		$translationKey = isset($commonTranslations[$type]) ? $commonTranslations[$type] : ucfirst($type);
 		return $langs->trans($translationKey);
 	}
 
-	/**
-	 * Get icon for object type
-	 *
-	 * @param string $type Object type
-	 * @return string Icon name
-	 */
-	private function getIconForType($type)
-	{
-		$iconMap = array(
-			'facture' => 'bill',
-			'invoice' => 'bill',
-			'propal' => 'propal',
-			'commande' => 'order',
-			'order' => 'order',
-			'facture_fourn' => 'supplier_invoice',
-			'invoice_supplier' => 'supplier_invoice',
-			'commande_fournisseur' => 'supplier_order',
-			'order_supplier' => 'supplier_order',
-			'supplier_proposal' => 'supplier_proposal',
-			'shipping' => 'shipment',
-			'expedition' => 'shipment',
-			'delivery' => 'delivery',
-			'contrat' => 'contract',
-			'contract' => 'contract',
-			'fichinter' => 'intervention',
-			'ticket' => 'ticket',
-			'project' => 'project',
-			'project_task' => 'projecttask',
-			'task' => 'projecttask',
-			'mo' => 'mrp',
-			'mrp_mo' => 'mrp',
-			'bom' => 'bom',
-		);
-
-		return isset($iconMap[$type]) ? $iconMap[$type] : 'generic';
-	}
 
 	/**
 	 * Check if an object can be unlinked based on Dolibarr's business rules
@@ -666,24 +585,23 @@ class LinkedObjectTree
 	}
 
 	/**
-	 * Normalize object type names to handle variations
+	 * Normalize object type names using getElementProperties
 	 *
 	 * @param string $type Object type
-	 * @return string Normalized type
+	 * @param string $returnField Field to return from properties (default: element)
+	 * @return string Normalized type or original if not found
 	 */
-	private function normalizeObjectType($type)
+	private function normalizeObjectType($type, $returnField = 'element')
 	{
-		$typeMap = array(
-			'shipping' => 'expedition',
-			'order' => 'commande',
-			'invoice' => 'facture',
-			'invoice_supplier' => 'facture_fourn',
-			'order_supplier' => 'commande_fournisseur',
-			'contract' => 'contrat',
-			'project_task' => 'task',
-			'mrp_mo' => 'mo',
-		);
+		// Use Dolibarr's native method to get element properties
+		$tmpobject = new CommonObject($this->db);
+		$elementProperties = $tmpobject->getElementProperties($type);
 		
-		return isset($typeMap[$type]) ? $typeMap[$type] : $type;
+		if (!empty($elementProperties) && !empty($elementProperties[$returnField])) {
+			return $elementProperties[$returnField];
+		}
+		
+		// Fallback to original type if not found
+		return $type;
 	}
 }
