@@ -261,7 +261,23 @@ class LinkedObjectTree
 		$tmpobject = new CommonObject($this->db);
 		$elementProperties = $tmpobject->getElementProperties($objectType);
 		
-		if (empty($elementProperties) || empty($elementProperties['classfile']) || empty($elementProperties['classpath'])) {
+		dol_syslog("LinkedObjectTree: Loading object type=".$objectType." id=".$objectId, LOG_DEBUG);
+		
+		if (empty($elementProperties)) {
+			dol_syslog("LinkedObjectTree: getElementProperties returned empty for type ".$objectType, LOG_WARNING);
+			// Fallback for unknown types
+			return array(
+				'ref' => '?',
+				'label' => $objectType.' #'.$objectId,
+				'url' => '',
+				'status' => '',
+			);
+		}
+		
+		dol_syslog("LinkedObjectTree: Element properties: ".print_r($elementProperties, true), LOG_DEBUG);
+		
+		if (empty($elementProperties['classfile']) || empty($elementProperties['classpath'])) {
+			dol_syslog("LinkedObjectTree: Missing classfile or classpath for type ".$objectType, LOG_WARNING);
 			// Fallback for unknown types
 			return array(
 				'ref' => '?',
@@ -278,7 +294,11 @@ class LinkedObjectTree
 
 		// Load the class file and instantiate the object
 		$filepath = DOL_DOCUMENT_ROOT.'/'.$classpath.'/'.$classfile;
+		
+		dol_syslog("LinkedObjectTree: Trying to load file: ".$filepath, LOG_DEBUG);
+		
 		if (!file_exists($filepath)) {
+			dol_syslog("LinkedObjectTree: File not found: ".$filepath, LOG_ERR);
 			return false;
 		}
 
@@ -309,6 +329,8 @@ class LinkedObjectTree
 				'amount' => isset($obj->total_ttc) ? $obj->total_ttc : (isset($obj->total_ht) ? $obj->total_ht : ''),
 			);
 		}
+		
+		dol_syslog("LinkedObjectTree: Failed to fetch object id=".$objectId." type=".$objectType." result=".$result, LOG_WARNING);
 
 		return false;
 	}
