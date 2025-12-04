@@ -313,11 +313,11 @@ class LinkedObjectTree
 		$classpath = $elementProperties['classpath'];
 		$classfile = $elementProperties['classfile'];
 
-		// Load the class file and instantiate the object
-		$filepath = DOL_DOCUMENT_ROOT.'/'.$classpath.'/'.$classfile;
-		
+		// Load the class file and instantiate the object (add .class.php extension like Dolibarr does)
+		$filepath = DOL_DOCUMENT_ROOT.'/'.$classpath.'/'.$classfile.'.class.php';
+
 		dol_syslog("LinkedObjectTree: Trying to load file: ".$filepath, LOG_DEBUG);
-		
+
 		if (!file_exists($filepath)) {
 			dol_syslog("LinkedObjectTree: File not found: ".$filepath, LOG_ERR);
 			return false;
@@ -333,12 +333,72 @@ class LinkedObjectTree
 		if ($result > 0) {
 			// Determine the appropriate date field based on object type (matching Dolibarr's original behavior)
 			$date = '';
-			if ($objectType == 'expedition' || $objectType == 'shipping') {
-				// For shipments: use date_delivery (planned delivery) with fallback to date_creation
-				$date = !empty($obj->date_delivery) ? $obj->date_delivery : (!empty($obj->date_creation) ? $obj->date_creation : '');
-			} else {
-				// For other types: use standard date or datec
-				$date = isset($obj->date) ? $obj->date : (isset($obj->datec) ? $obj->datec : '');
+			
+			// Map object types to their specific date fields (based on Dolibarr's linkedobjectblock templates)
+			switch ($objectType) {
+				case 'expedition':
+				case 'shipping':
+					// Shipments: date_delivery with fallback to date_creation
+					$date = !empty($obj->date_delivery) ? $obj->date_delivery : (!empty($obj->date_creation) ? $obj->date_creation : '');
+					break;
+					
+				case 'reception':
+				case 'delivery':
+					// Receptions and deliveries: date_delivery
+					$date = !empty($obj->date_delivery) ? $obj->date_delivery : '';
+					break;
+					
+				case 'contrat':
+				case 'contract':
+					// Contracts: date_contrat
+					$date = !empty($obj->date_contrat) ? $obj->date_contrat : '';
+					break;
+					
+				case 'ficheinter':
+				case 'intervention':
+					// Interventions: datev (date of intervention)
+					$date = !empty($obj->datev) ? $obj->datev : '';
+					break;
+					
+				case 'expensereport':
+					// Expense reports: date_debut (start date)
+					$date = !empty($obj->date_debut) ? $obj->date_debut : '';
+					break;
+					
+				case 'subscription':
+					// Subscriptions: dateh
+					$date = !empty($obj->dateh) ? $obj->dateh : '';
+					break;
+					
+				case 'asset':
+					// Assets: date_start
+					$date = !empty($obj->date_start) ? $obj->date_start : '';
+					break;
+					
+				case 'bom':
+				case 'mrp':
+				case 'mo':
+				case 'supplier_proposal':
+					// BOM, MRP, MO, Supplier proposals: date_creation
+					$date = !empty($obj->date_creation) ? $obj->date_creation : '';
+					break;
+					
+				case 'ticket':
+					// Tickets: datec (creation date)
+					$date = !empty($obj->datec) ? $obj->datec : '';
+					break;
+					
+				case 'conferenceorbooth':
+				case 'conferenceorboothattendee':
+					// Event organization: date_subscription
+					$date = !empty($obj->date_subscription) ? $obj->date_subscription : '';
+					break;
+					
+				default:
+					// Default: try 'date' field first (used by most objects like invoices, orders, proposals)
+					// then fall back to 'datec' (creation date) if 'date' is not available
+					$date = !empty($obj->date) ? $obj->date : (!empty($obj->datec) ? $obj->datec : '');
+					break;
 			}
 			
 			return array(
