@@ -85,15 +85,27 @@ class LinkedObjectTree
 		$this->visited = array();
 		$this->tree = array();
 
+		dol_syslog("LinkedObjectTree: buildCompleteTree for ".$object->element." ID ".$object->id, LOG_DEBUG);
+
 		// Find root(s) of the tree
 		$roots = $this->findRoots($object->id, $object->element);
+
+		dol_syslog("LinkedObjectTree: Found ".count($roots)." root(s)", LOG_DEBUG);
 
 		// Build tree from each root
 		$treeNodes = array();
 		foreach ($roots as $root) {
+			dol_syslog("LinkedObjectTree: Building tree from root ".$root['type']." ID ".$root['id'], LOG_DEBUG);
 			$this->visited = array(); // Reset visited for each root
-			$treeNodes[] = $this->buildTreeFromNode($root['id'], $root['type'], 0);
+			$node = $this->buildTreeFromNode($root['id'], $root['type'], 0);
+			if ($node !== null) {
+				$treeNodes[] = $node;
+			} else {
+				dol_syslog("LinkedObjectTree: buildTreeFromNode returned null for root", LOG_WARNING);
+			}
 		}
+
+		dol_syslog("LinkedObjectTree: Built tree with ".count($treeNodes)." nodes", LOG_DEBUG);
 
 		return $treeNodes;
 	}
