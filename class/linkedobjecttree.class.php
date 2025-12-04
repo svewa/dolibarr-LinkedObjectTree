@@ -278,9 +278,8 @@ class LinkedObjectTree
 	{
 		global $langs;
 
-		// Use Dolibarr's native method to get element properties
-		$tmpobject = new CommonObject($this->db);
-		$elementProperties = $tmpobject->getElementProperties($objectType);
+		// Use Dolibarr's native function to get element properties
+		$elementProperties = getElementProperties($objectType);
 		
 		dol_syslog("LinkedObjectTree: Loading object type=".$objectType." id=".$objectId, LOG_DEBUG);
 		
@@ -626,9 +625,8 @@ class LinkedObjectTree
 	{
 		global $langs;
 		
-		// Use Dolibarr's native method to get element properties
-		$tmpobject = new CommonObject($this->db);
-		$elementProperties = $tmpobject->getElementProperties($type);
+		// Use Dolibarr's native function to get element properties
+		$elementProperties = getElementProperties($type);
 		
 		if (!empty($elementProperties) && !empty($elementProperties['langs'])) {
 			// Load the language file for this element
@@ -696,9 +694,8 @@ class LinkedObjectTree
 	 */
 	private function normalizeObjectType($type, $returnField = 'element')
 	{
-		// Use Dolibarr's native method to get element properties
-		$tmpobject = new CommonObject($this->db);
-		$elementProperties = $tmpobject->getElementProperties($type);
+		// Use Dolibarr's native function to get element properties
+		$elementProperties = getElementProperties($type);
 		
 		if (!empty($elementProperties) && !empty($elementProperties[$returnField])) {
 			return $elementProperties[$returnField];
