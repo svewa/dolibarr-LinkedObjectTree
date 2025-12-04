@@ -8,10 +8,12 @@ This module enhances Dolibarr's linked objects display by replacing the default 
 
 ### Before: Classic Flat List
 ![Classic Related Objects View](classic-related-objects.png)
+
 *The standard Dolibarr linked objects display shows a simple flat list of related documents.*
 
 ### After: Interactive Tree View
 ![New Tree-Based Related Objects View](new-related-objects.png)
+
 *The enhanced view displays all linked objects in a hierarchical tree structure with expand/collapse functionality and current object highlighting.*
 
 ## Features
