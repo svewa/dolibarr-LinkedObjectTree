@@ -217,8 +217,11 @@ class LinkedObjectTree
 	 */
 	private function buildTreeFromNode($objectId, $objectType, $depth)
 	{
+		dol_syslog("LinkedObjectTree: buildTreeFromNode type=".$objectType." id=".$objectId." depth=".$depth, LOG_DEBUG);
+		
 		// Check depth limit
 		if ($depth > $this->maxDepth) {
+			dol_syslog("LinkedObjectTree: Max depth reached", LOG_DEBUG);
 			return null;
 		}
 
@@ -226,6 +229,7 @@ class LinkedObjectTree
 
 		// Check if already visited (circular reference)
 		if (isset($this->visited[$key])) {
+			dol_syslog("LinkedObjectTree: Already visited ".$key, LOG_DEBUG);
 			return null;
 		}
 		$this->visited[$key] = true;
@@ -233,8 +237,11 @@ class LinkedObjectTree
 		// Load object details
 		$objectData = $this->loadObjectData($objectId, $objectType);
 		if (!$objectData) {
+			dol_syslog("LinkedObjectTree: loadObjectData returned false/empty for ".$key, LOG_WARNING);
 			return null;
 		}
+
+		dol_syslog("LinkedObjectTree: Successfully loaded object data for ".$key, LOG_DEBUG);
 
 		// Build node
 		$node = array(
@@ -248,6 +255,8 @@ class LinkedObjectTree
 
 		// Get children
 		$children = $this->getChildren($objectId, $objectType);
+		dol_syslog("LinkedObjectTree: Found ".count($children)." children for ".$key, LOG_DEBUG);
+		
 		foreach ($children as $child) {
 			$childNode = $this->buildTreeFromNode($child['id'], $child['type'], $depth + 1);
 			if ($childNode !== null) {
